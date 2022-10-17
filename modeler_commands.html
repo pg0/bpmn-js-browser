@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>BPMN i/o</title>
+
+    <!-- required modeler styles -->
+    <link rel="stylesheet" href="./assets/bpmn-js.css">
+    <link rel="stylesheet" href="./assets/diagram-js.css">
+    <link rel="stylesheet" href="./assets/bpmn-font/css/bpmn.css">
+
+    <!-- modeler distro -->
+    <script src="./js/bpmn-modeler.development.js"></script>
+    <script src="./js/FileSaver.js"></script>
+  </head>
+  <body>
+    <style>
+      html, body, #canvas {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      #btngroup {
+        position: fixed;
+        top: 20px;
+        left: 80px;
+      }
+
+    </style>
+    <div id="canvas"></div>
+
+    <div id="btngroup"><button id="load-button">load BPMN</button> <button id="save-button">save BPMN</button></div>
+
+    <script>
+
+      var modeler = new BpmnJS({
+        container: '#canvas',
+        keyboard: {
+          bindTo: window
+        }
+      });
+      modeler.createDiagram()
+
+      async function importDiagramm(bpmnXML) {
+        try {
+          // we did well!
+          await modeler.importXML(bpmnXML);
+          modeler.get('canvas').zoom('fit-viewport');
+
+        } catch (err) {
+          // import failed :-(
+        }
+      }
+      
+      async function exportDiagram() {
+
+        try {
+
+          var result = await modeler.saveXML({ format: true });
+          var file = new File([result.xml], "bpmn2.bpmn", {type: "text/plain;charset=utf-8"});
+          saveAs(file);
+          //console.log(file);
+
+        } catch (err) {
+
+          console.error('could not save BPMN 2.0 diagram', err);
+        }
+      }
+
+  
+
+      let btnOpen = document.getElementById('load-button');
+      let btnSave = document.getElementById('save-button');
+
+      // OPEN
+      btnOpen.addEventListener('click', () => {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async _this => {
+          let content = await readFileAsync(input.files[0])
+          importDiagramm(content)
+        };
+        input.click();
+      })
+
+      // SAVE
+      btnSave.addEventListener('click', () => exportDiagram());
+
+      function readFileAsync(file) {
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+
+          reader.onload = () => {
+            resolve(reader.result);
+          };
+          reader.onerror = reject;
+          reader.readAsText(file);
+        })
+      }
+
+
+
+    </script>
+  </body>
+</html>
